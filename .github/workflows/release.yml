@@ -1,0 +1,150 @@
+name: Release
+
+# A release is cut by pushing a version tag (e.g. v1.0.0) on a commit that is already on main.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The tag is the source of truth for the release, pubspec.yaml must agree with it.
+      - name: Check tag matches pubspec version
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          pubspec_version=$(grep '^version:' pubspec.yaml | sed -E 's/version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          if [ "v${pubspec_version}" != "${TAG}" ]; then
+            echo "::error::Tag ${TAG} does not match pubspec.yaml version ${pubspec_version}"
+            exit 1
+          fi
+          echo "version=${pubspec_version}" >> "$GITHUB_OUTPUT"
+
+      # Only code that went through a pull request and CI may be released.
+      - name: Check the tagged commit is on main
+        run: |
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "::error::Tagged commit is not on main"
+            exit 1
+          fi
+
+  build:
+    name: Build (${{ matrix.target }})
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - target: windows
+            os: windows-latest
+          - target: macos
+            os: macos-latest
+          - target: linux
+            os: ubuntu-latest
+    env:
+      VERSION: ${{ needs.verify.outputs.version }}
+      # Production backend URL, set in Settings > Secrets and variables > Actions > Variables.
+      API_BASE_URL: ${{ vars.API_BASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require API_BASE_URL
+        shell: bash
+        run: |
+          if [ -z "${API_BASE_URL}" ]; then
+            echo "::error::Repository variable API_BASE_URL is not set"
+            exit 1
+          fi
+
+      - name: Install Linux build dependencies
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build ${{ matrix.target }}
+        shell: bash
+        run: flutter build ${{ matrix.target }} --release --dart-define=API_BASE_URL="${API_BASE_URL}"
+
+      # Unsigned archives for now. Real installers and code signing are separate, later steps.
+      - name: Package (windows)
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "gift-card-front-$env:VERSION-windows-x64.zip"
+
+      - name: Package (macos)
+        if: matrix.target == 'macos'
+        run: |
+          hdiutil create -volname "Gift Card" \
+            -srcfolder build/macos/Build/Products/Release/gift_card_front.app \
+            -ov -format UDZO "gift-card-front-${VERSION}-macos.dmg"
+
+      - name: Package (linux)
+        if: matrix.target == 'linux'
+        run: |
+          tar -czf "gift-card-front-${VERSION}-linux-x64.tar.gz" -C build/linux/x64/release/bundle .
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.target }}
+          path: |
+            gift-card-front-*.zip
+            gift-card-front-*.dmg
+            gift-card-front-*.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: package-*
+          merge-multiple: true
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "${TAG}" dist/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${TAG}" \
+            --generate-notes \
+            --verify-tag
