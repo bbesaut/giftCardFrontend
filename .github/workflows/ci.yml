@@ -82,3 +82,43 @@ jobs:
           done
           docker logs smoke
           exit 1
+
+  desktop-build:
+    name: Desktop build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      # One OS failing must not hide the result of the others.
+      fail-fast: false
+      matrix:
+        include:
+          - target: windows
+            os: windows-latest
+          - target: macos
+            os: macos-latest
+          - target: linux
+            os: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Flutter's Linux desktop toolchain and GTK headers are not preinstalled on the runner.
+      - name: Install Linux build dependencies
+        if: matrix.target == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Build only: proves the app compiles for this OS. Packaging and signing come with the release workflow.
+      - name: Build ${{ matrix.target }}
+        run: flutter build ${{ matrix.target }} --release
