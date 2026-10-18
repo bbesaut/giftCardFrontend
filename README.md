@@ -1,17 +1,48 @@
-# gift_card_front
+# Gift Card Front-End
 
-Gift Card Service front-end
+Flutter front-end (web, desktop and mobile from one codebase) for the Gift Card Service backend ([giftCardMicroService](https://github.com/bbesaut/giftCardMicroService)).
 
-## Getting Started
+Project conventions and architecture rules live in [CLAUDE.md](CLAUDE.md).
 
-This project is a starting point for a Flutter application.
+## Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- [FVM](https://fvm.app) (Flutter Version Management). The Flutter version is pinned in `.fvmrc` and `pubspec.yaml` (`environment.flutter`); update both together.
+- Chrome, to run the web target locally.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Setup
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+fvm install          # Install the pinned Flutter version
+fvm flutter pub get  # Fetch dependencies
+```
+
+## Run
+
+```bash
+fvm flutter run -d chrome
+```
+
+## Quality gate
+
+Run these commands **in this order** before opening a pull request. They are exactly the steps of the CI job `Quality gate` (`.github/workflows/ci.yml`), cheapest first, so a failure shows up as early as possible.
+
+```bash
+fvm flutter pub get                                    # 1. Install dependencies
+fvm dart format --output=none --set-exit-if-changed .  # 2. Formatting check (does not modify files)
+fvm flutter analyze --fatal-infos                      # 3. Static analysis (infos fail the build too)
+fvm flutter test --coverage                            # 4. Tests, writes coverage/lcov.info
+fvm flutter build web --release                        # 5. Production build must compile
+```
+
+To fix formatting instead of only checking it: `fvm dart format .`
+
+Whenever a new kind of check is added to the CI (golden tests, integration tests, coverage threshold...), it is added to this list in the same pull request, in the same position.
+
+## CI/CD
+
+- **CI**: GitHub Actions, `.github/workflows/ci.yml`. Runs on every pull request and every push to `develop` and `main`.
+- **CD**: Docker image served by nginx, deployed on Render after CI passes on `main` (in progress).
+
+## Git workflow
+
+Gitflow: `main` (production), `develop`, `feature/*`. Both long-lived branches are protected by a ruleset: pull request required, CI must be green, no force push. Merge with a merge commit to keep the atomic commit history.
