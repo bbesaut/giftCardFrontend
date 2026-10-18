@@ -53,3 +53,6 @@ app.*.map.json
 
 # Local dev HTTPS certificates (mkcert), regenerate per machine
 certs/
+
+# Personal config overrides (not shared)
+config/local.json
