@@ -16,11 +16,28 @@ fvm install          # Install the pinned Flutter version
 fvm flutter pub get  # Fetch dependencies
 ```
 
+## Configuration
+
+Settings are compile-time values (Flutter apps cannot read a `.env` at runtime), loaded from a JSON file with `--dart-define-from-file`. They end up in the bundle, so they are **public**: never put a secret in them.
+
+| File | Purpose | Committed |
+|---|---|---|
+| `config/dev.json` | Shared dev settings (backend on `https://localhost:8080`) | yes |
+| `config/local.json` | Your personal overrides | no (gitignored) |
+
+| Key | Meaning | Default |
+|---|---|---|
+| `API_BASE_URL` | Backend base URL, no trailing slash | `https://localhost:8080` |
+
+Code reads them through `AppConfig` (`lib/core/config/app_config.dart`), never with `String.fromEnvironment` directly. In production the value comes from the Render service environment (passed to the Docker build as `API_BASE_URL`).
+
 ## Run
 
 ```bash
-fvm flutter run -d chrome
+fvm flutter run -d chrome --dart-define-from-file=config/dev.json
 ```
+
+In VS Code, the launch configuration `gift_card_front (dev, chrome)` does the same.
 
 ## Quality gate
 
