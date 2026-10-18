@@ -138,13 +138,19 @@ jobs:
           pattern: package-*
           merge-multiple: true
 
-      - name: Create release
+      # release-please normally creates the GitHub Release (with the changelog) when it creates the tag:
+      # then we only attach the packages. For a tag pushed by hand, create the release ourselves.
+      - name: Attach packages to the release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
-          gh release create "${TAG}" dist/* \
-            --repo "${GITHUB_REPOSITORY}" \
-            --title "${TAG}" \
-            --generate-notes \
-            --verify-tag
+          if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            gh release upload "${TAG}" dist/* --repo "${GITHUB_REPOSITORY}" --clobber
+          else
+            gh release create "${TAG}" dist/* \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "${TAG}" \
+              --generate-notes \
+              --verify-tag
+          fi
