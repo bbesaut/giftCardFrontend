@@ -73,7 +73,20 @@ Whenever a new kind of check is added to the CI (golden tests, integration tests
 ## CI/CD
 
 - **CI**: GitHub Actions, `.github/workflows/ci.yml`. Runs on every pull request and every push to `develop` and `main`.
-- **CD**: Docker image served by nginx, deployed on Render after CI passes on `main` (in progress).
+- **CD (web)**: Docker image served by nginx, built and deployed by Render on every merge to `main`, once CI passes.
+- **Release (desktop)**: `.github/workflows/release.yml` builds Windows, macOS and Linux packages when a `vX.Y.Z` tag is pushed and attaches them to a GitHub Release. Packages are unsigned for now.
+
+## Releasing
+
+Versions are automated with [release-please](https://github.com/googleapis/release-please), driven by [Conventional Commits](https://www.conventionalcommits.org) (`feat:` bumps the minor, `fix:` the patch, `feat!:` or a `BREAKING CHANGE:` footer the major; `ci:`, `docs:`, `chore:` do not release).
+
+1. Merge `develop` into `main` through a pull request, as usual.
+2. The `Release Please` workflow opens (or updates) a pull request on `main` named `chore(main): release X.Y.Z`. It contains the `pubspec.yaml` version bump and the `CHANGELOG.md` entry.
+3. Review it, wait for CI, and merge it with a merge commit. This creates the `vX.Y.Z` tag and the GitHub Release.
+4. The tag triggers the `Release` workflow, which builds the desktop packages and attaches them to that release.
+5. Merge `main` back into `develop` through a pull request, so `develop` gets the version bump and the changelog.
+
+Never edit `version:` in `pubspec.yaml` by hand: the `# x-release-please-version` marker on that line is how the tool finds it. The workflow needs a repository secret `RELEASE_PLEASE_TOKEN` (a personal access token with contents and pull requests write access): pull requests and tags created with the default token do not trigger other workflows.
 
 ## Git workflow
 
