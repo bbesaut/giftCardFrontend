@@ -60,6 +60,14 @@ docker build --build-arg API_BASE_URL=https://api.example.invalid -t gift-card-f
 docker run --rm -e PORT=8080 -p 8080:8080 gift-card-front:local                                # 7. Serve it, then open http://localhost:8080 (health: /healthz)
 ```
 
+A third CI job, `Desktop build`, compiles the app on each desktop OS (one runner per OS, because Flutter cannot cross-compile desktop targets). Locally, only your own OS can be built:
+
+```bash
+fvm flutter build windows --release  # 8. On Windows (needs Visual Studio with "Desktop development with C++")
+fvm flutter build macos --release    #    On macOS (needs Xcode)
+fvm flutter build linux --release    #    On Linux (needs clang, cmake, ninja, pkg-config, libgtk-3-dev)
+```
+
 Whenever a new kind of check is added to the CI (golden tests, integration tests, coverage threshold...), it is added to this list in the same pull request, in the same position.
 
 ## CI/CD
