@@ -5,7 +5,12 @@
   "bump-minor-pre-major": true,
   "packages": {
     ".": {
-      "extra-files": ["pubspec.yaml"]
+      "extra-files": [
+        {
+          "type": "generic",
+          "path": "pubspec.yaml"
+        }
+      ]
     }
   }
 }
