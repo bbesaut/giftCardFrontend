@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+# A newer push to the same ref makes the previous run obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gate:
+    name: Quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Flutter version comes from pubspec.yaml (environment.flutter), the single source of truth.
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: pubspec.yaml
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze
+        run: flutter analyze --fatal-infos
+
+      - name: Run tests
+        run: flutter test --coverage
+
+      - name: Build web
+        run: flutter build web --release
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          retention-days: 7
+
+      - name: Upload web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+          retention-days: 7
+
+  docker-image:
+    name: Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Build only (nothing is pushed): proves the production image still builds.
+      # The real API_BASE_URL is set on Render, this one is a placeholder.
+      - name: Build image
+        run: docker build --build-arg API_BASE_URL=https://api.example.invalid -t gift-card-front:ci .
+
+      - name: Smoke test image
+        run: |
+          docker run -d --name smoke -e PORT=8080 -p 8080:8080 gift-card-front:ci
+          for i in $(seq 1 15); do
+            curl -fsS http://localhost:8080/healthz && exit 0
+            sleep 1
+          done
+          docker logs smoke
+          exit 1
