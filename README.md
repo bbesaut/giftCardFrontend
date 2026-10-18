@@ -36,6 +36,13 @@ fvm flutter build web --release                        # 5. Production build mus
 
 To fix formatting instead of only checking it: `fvm dart format .`
 
+The CI also runs a second job, `Docker image` (requires Docker), in parallel with the quality gate:
+
+```bash
+docker build --build-arg API_BASE_URL=https://api.example.invalid -t gift-card-front:local .  # 6. Production image builds
+docker run --rm -e PORT=8080 -p 8080:8080 gift-card-front:local                                # 7. Serve it, then open http://localhost:8080 (health: /healthz)
+```
+
 Whenever a new kind of check is added to the CI (golden tests, integration tests, coverage threshold...), it is added to this list in the same pull request, in the same position.
 
 ## CI/CD
