@@ -1,0 +1,8 @@
+# Normalize line endings so Windows dev machines and Linux CI see the same files
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.otf binary
