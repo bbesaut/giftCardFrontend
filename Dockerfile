@@ -15,10 +15,14 @@ RUN apt-get update \
 # Install Flutter from its git tag so the toolchain is exactly the pinned version.
 ENV FLUTTER_HOME=/opt/flutter
 ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
+# Sandboxed builders (e.g. Render) cannot chown to the uid/gid stored in Flutter's tar archives,
+# which makes tar, and therefore `flutter precache`, fail. Skip restoring file ownership.
+ENV TAR_OPTIONS="--no-same-owner"
+
 RUN git clone --depth 1 --branch ${FLUTTER_VERSION} https://github.com/flutter/flutter.git ${FLUTTER_HOME} \
-    && git config --global --add safe.directory ${FLUTTER_HOME} \
-    && flutter config --no-analytics --enable-web \
-    && flutter precache --web
+    && git config --global --add safe.directory ${FLUTTER_HOME}
+RUN flutter config --no-analytics --enable-web
+RUN flutter precache --web
 
 WORKDIR /app
 
