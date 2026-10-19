@@ -68,13 +68,22 @@ fvm flutter build macos --release    #    On macOS (needs Xcode)
 fvm flutter build linux --release    #    On Linux (needs clang, cmake, ninja, pkg-config, libgtk-3-dev)
 ```
 
+On Windows, the same job then builds the installer with [Inno Setup](https://jrsoftware.org/isinfo.php) and smoke tests it (silent install, checks, silent uninstall). Install Inno Setup once (`winget install --id JRSoftware.InnoSetup -e`), then:
+
+```powershell
+./installer/windows/build-installer.ps1 -Version 0.0.0-local  # 9. Writes gift-card-front-0.0.0-local-windows-x64-setup.exe at the repo root
+./installer/windows/test-installer.ps1 -Version 0.0.0-local   # 10. Installs for the current user in a temp folder, checks, uninstalls
+```
+
+The installer script is `installer/windows/setup.iss`. Its `AppId` identifies the app to Windows across versions: never change it.
+
 Whenever a new kind of check is added to the CI (golden tests, integration tests, coverage threshold...), it is added to this list in the same pull request, in the same position.
 
 ## CI/CD
 
 - **CI**: GitHub Actions, `.github/workflows/ci.yml`. Runs on every pull request and every push to `develop` and `main`.
 - **CD (web)**: Docker image served by nginx, built and deployed by Render on every merge to `main`, once CI passes.
-- **Release (desktop)**: `.github/workflows/release.yml` builds Windows, macOS and Linux packages when a `vX.Y.Z` tag is pushed and attaches them to a GitHub Release. Packages are unsigned for now.
+- **Release (desktop)**: `.github/workflows/release.yml` builds Windows, macOS and Linux packages when a `vX.Y.Z` tag is pushed and attaches them, with a `SHA256SUMS.txt` checksum file, to a GitHub Release. Windows ships an installer (`-setup.exe`); macOS and Linux are still plain archives. Nothing is signed yet.
 
 ## Releasing
 
