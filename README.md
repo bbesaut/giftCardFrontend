@@ -90,7 +90,7 @@ Whenever a new kind of check is added to the CI (golden tests, integration tests
 
 ## CI/CD
 
-- **CI**: GitHub Actions, `.github/workflows/ci.yml`. Runs on every pull request and every push to `develop` and `main`.
+- **CI**: GitHub Actions, `.github/workflows/ci.yml`. Runs on every pull request (to `develop` or `main`) and on every push to `main`. A merge into `develop` is not re-tested: its pull request already was.
 - **CD (web)**: Docker image served by nginx, built and deployed by Render on every merge to `main`, once CI passes.
 - **Release (desktop)**: `.github/workflows/release.yml` builds Windows, macOS and Linux packages when a `vX.Y.Z` tag is pushed and attaches them, with a `SHA256SUMS.txt` checksum file, to a GitHub Release. Each OS ships an installer: Windows `-setup.exe`, macOS `.dmg`, Linux `.deb` (plus a portable `.tar.gz`). Nothing is signed yet.
 
