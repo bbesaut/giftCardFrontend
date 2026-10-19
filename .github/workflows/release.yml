@@ -80,11 +80,7 @@ jobs:
           sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
-          channel: stable
-          cache: true
+        uses: ./.github/actions/setup-flutter
 
       - name: Install dependencies
         run: flutter pub get
@@ -107,15 +103,24 @@ jobs:
 
       - name: Package (macos)
         if: matrix.target == 'macos'
-        run: |
-          hdiutil create -volname "Gift Card" \
-            -srcfolder build/macos/Build/Products/Release/gift_card_front.app \
-            -ov -format UDZO "gift-card-front-${VERSION}-macos.dmg"
+        run: ./installer/macos/build-dmg.sh "${VERSION}"
+
+      - name: Smoke test disk image (macos)
+        if: matrix.target == 'macos'
+        run: ./installer/macos/test-dmg.sh "${VERSION}"
 
       - name: Package (linux)
         if: matrix.target == 'linux'
-        run: |
-          tar -czf "gift-card-front-${VERSION}-linux-x64.tar.gz" -C build/linux/x64/release/bundle .
+        run: ./installer/linux/build-deb.sh "${VERSION}"
+
+      - name: Smoke test package (linux)
+        if: matrix.target == 'linux'
+        run: ./installer/linux/test-deb.sh "${VERSION}"
+
+      # Portable archive for distributions that do not use .deb packages.
+      - name: Package archive (linux)
+        if: matrix.target == 'linux'
+        run: tar -czf "gift-card-front-${VERSION}-linux-x64.tar.gz" -C build/linux/x64/release/bundle .
 
       - name: Upload package
         uses: actions/upload-artifact@v4
@@ -124,6 +129,7 @@ jobs:
           path: |
             gift-card-front-*-setup.exe
             gift-card-front-*.dmg
+            gift-card-front_*_amd64.deb
             gift-card-front-*.tar.gz
           if-no-files-found: error
           retention-days: 7
@@ -146,7 +152,7 @@ jobs:
       # Lets users verify a download: `sha256sum -c SHA256SUMS.txt` next to the downloaded files.
       - name: Write checksums
         working-directory: dist
-        run: sha256sum gift-card-front-* > SHA256SUMS.txt
+        run: sha256sum gift-card-front* > SHA256SUMS.txt
 
       # release-please normally creates the GitHub Release (with the changelog) when it creates the tag:
       # then we only attach the packages. For a tag pushed by hand, create the release ourselves.
