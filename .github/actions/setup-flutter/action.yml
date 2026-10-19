@@ -1,0 +1,27 @@
+name: Set up Flutter
+description: Installs the Flutter version pinned in pubspec.yaml (environment.flutter), the single source of truth.
+
+runs:
+  using: composite
+  steps:
+    # subosito/flutter-action can read pubspec.yaml itself (flutter-version-file), but then needs
+    # `yq`, which is not guaranteed on a runner and is fetched from a package feed on Windows.
+    # Reading the version here removes that external dependency.
+    - name: Read pinned Flutter version
+      id: version
+      shell: bash
+      run: |
+        version="$(sed -nE 's/^[[:space:]]+flutter:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' pubspec.yaml | head -n 1)"
+        if [ -z "${version}" ]; then
+          echo "::error::Could not find environment.flutter in pubspec.yaml"
+          exit 1
+        fi
+        echo "Flutter ${version}"
+        echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+    - name: Install Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: ${{ steps.version.outputs.version }}
+        channel: stable
+        cache: true
