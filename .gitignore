@@ -56,3 +56,6 @@ certs/
 
 # Personal config overrides (not shared)
 config/local.json
+
+# Installers and packages produced locally
+dist/
