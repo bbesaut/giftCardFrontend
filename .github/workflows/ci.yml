@@ -132,3 +132,19 @@ jobs:
         if: matrix.target == 'windows'
         shell: pwsh
         run: ./installer/windows/test-installer.ps1 -Version 0.0.0-ci
+
+      - name: Build disk image (macos)
+        if: matrix.target == 'macos'
+        run: ./installer/macos/build-dmg.sh 0.0.0-ci
+
+      - name: Smoke test disk image (macos)
+        if: matrix.target == 'macos'
+        run: ./installer/macos/test-dmg.sh 0.0.0-ci
+
+      - name: Build package (linux)
+        if: matrix.target == 'linux'
+        run: ./installer/linux/build-deb.sh 0.0.0-ci
+
+      - name: Smoke test package (linux)
+        if: matrix.target == 'linux'
+        run: ./installer/linux/test-deb.sh 0.0.0-ci
