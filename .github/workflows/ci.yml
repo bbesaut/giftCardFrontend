@@ -119,6 +119,16 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # Build only: proves the app compiles for this OS. Packaging and signing come with the release workflow.
       - name: Build ${{ matrix.target }}
         run: flutter build ${{ matrix.target }} --release
+
+      # Proves the installer still builds. The throwaway version is never published (see release.yml).
+      - name: Build installer (windows)
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: ./installer/windows/build-installer.ps1 -Version 0.0.0-ci
+
+      - name: Smoke test installer (windows)
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: ./installer/windows/test-installer.ps1 -Version 0.0.0-ci

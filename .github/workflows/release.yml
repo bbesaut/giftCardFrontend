@@ -93,12 +93,17 @@ jobs:
         shell: bash
         run: flutter build ${{ matrix.target }} --release --dart-define=API_BASE_URL="${API_BASE_URL}"
 
-      # Unsigned archives for now. Real installers and code signing are separate, later steps.
+      # Unsigned packages for now. Code signing is a separate, later step.
+      # The same script runs in CI on every pull request, so a broken installer is caught before a release.
       - name: Package (windows)
         if: matrix.target == 'windows'
         shell: pwsh
-        run: |
-          Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath "gift-card-front-$env:VERSION-windows-x64.zip"
+        run: ./installer/windows/build-installer.ps1 -Version $env:VERSION
+
+      - name: Smoke test installer (windows)
+        if: matrix.target == 'windows'
+        shell: pwsh
+        run: ./installer/windows/test-installer.ps1 -Version $env:VERSION
 
       - name: Package (macos)
         if: matrix.target == 'macos'
@@ -117,7 +122,7 @@ jobs:
         with:
           name: package-${{ matrix.target }}
           path: |
-            gift-card-front-*.zip
+            gift-card-front-*-setup.exe
             gift-card-front-*.dmg
             gift-card-front-*.tar.gz
           if-no-files-found: error
@@ -137,6 +142,11 @@ jobs:
           path: dist
           pattern: package-*
           merge-multiple: true
+
+      # Lets users verify a download: `sha256sum -c SHA256SUMS.txt` next to the downloaded files.
+      - name: Write checksums
+        working-directory: dist
+        run: sha256sum gift-card-front-* > SHA256SUMS.txt
 
       # release-please normally creates the GitHub Release (with the changelog) when it creates the tag:
       # then we only attach the packages. For a tag pushed by hand, create the release ourselves.
