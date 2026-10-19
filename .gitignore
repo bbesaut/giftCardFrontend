@@ -59,3 +59,5 @@ config/local.json
 
 # Installers and packages produced locally
 dist/
+gift-card-front-*
+gift-card-front_*
