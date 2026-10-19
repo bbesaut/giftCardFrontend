@@ -77,13 +77,22 @@ On Windows, the same job then builds the installer with [Inno Setup](https://jrs
 
 The installer script is `installer/windows/setup.iss`. Its `AppId` identifies the app to Windows across versions: never change it.
 
+macOS and Linux follow the same build-then-test pattern, on their own OS (run after the matching `flutter build`):
+
+```bash
+./installer/macos/build-dmg.sh 0.0.0-local   # 11. macOS: gift-card-front-0.0.0-local-macos.dmg (app + shortcut to /Applications)
+./installer/macos/test-dmg.sh 0.0.0-local    #     mounts the image, checks its content
+./installer/linux/build-deb.sh 0.0.0-local   # 12. Linux: gift-card-front_0.0.0-local_amd64.deb (needs dpkg-deb)
+./installer/linux/test-deb.sh 0.0.0-local    #     really installs it with apt, checks, removes it: run in a throwaway VM or container
+```
+
 Whenever a new kind of check is added to the CI (golden tests, integration tests, coverage threshold...), it is added to this list in the same pull request, in the same position.
 
 ## CI/CD
 
 - **CI**: GitHub Actions, `.github/workflows/ci.yml`. Runs on every pull request and every push to `develop` and `main`.
 - **CD (web)**: Docker image served by nginx, built and deployed by Render on every merge to `main`, once CI passes.
-- **Release (desktop)**: `.github/workflows/release.yml` builds Windows, macOS and Linux packages when a `vX.Y.Z` tag is pushed and attaches them, with a `SHA256SUMS.txt` checksum file, to a GitHub Release. Windows ships an installer (`-setup.exe`); macOS and Linux are still plain archives. Nothing is signed yet.
+- **Release (desktop)**: `.github/workflows/release.yml` builds Windows, macOS and Linux packages when a `vX.Y.Z` tag is pushed and attaches them, with a `SHA256SUMS.txt` checksum file, to a GitHub Release. Each OS ships an installer: Windows `-setup.exe`, macOS `.dmg`, Linux `.deb` (plus a portable `.tar.gz`). Nothing is signed yet.
 
 ## Releasing
 
