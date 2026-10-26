@@ -56,6 +56,38 @@ jobs:
           path: build/web
           retention-days: 7
 
+  sast:
+    name: SAST (SonarQube Cloud)
+    # Needs the coverage report produced by the quality gate.
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Sonar needs the full history to attribute issues to new code.
+          fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+
+      # Project settings live in sonar-project.properties. The scan fails the job when the
+      # SonarQube quality gate fails.
+      - name: Scan
+        uses: SonarSource/sonarqube-scan-action@v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Check quality gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   docker-image:
     name: Docker image
     runs-on: ubuntu-latest
