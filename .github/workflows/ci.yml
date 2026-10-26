@@ -1,8 +1,10 @@
 name: CI
 
 on:
+  # Every change is checked on its pull request, against develop or main.
   pull_request:
     branches: [develop, main]
+  # After a merge, develop and main are re-checked: the checks run again on the merged code.
   push:
     branches: [develop, main]
 
