@@ -60,6 +60,8 @@ docker build --build-arg API_BASE_URL=https://api.example.invalid -t gift-card-f
 docker run --rm -e PORT=8080 -p 8080:8080 gift-card-front:local                                # 7. Serve it, then open http://localhost:8080 (health: /healthz)
 ```
 
+A `SAST` job sends the code and the coverage report to [SonarQube Cloud](https://sonarcloud.io) (bugs, vulnerabilities, code smells, secrets) and fails when its quality gate fails. It runs only in CI (it needs the `SONAR_TOKEN` secret). Results: the project page on SonarQube Cloud, and the quality gate comment on each pull request.
+
 A third CI job, `Desktop build`, compiles the app on each desktop OS (one runner per OS, because Flutter cannot cross-compile desktop targets). Locally, only your own OS can be built:
 
 ```bash
@@ -90,7 +92,7 @@ Whenever a new kind of check is added to the CI (golden tests, integration tests
 
 ## CI/CD
 
-- **CI**: GitHub Actions, `.github/workflows/ci.yml`. Runs on every pull request (to `develop` or `main`) and on every push to `main`. A merge into `develop` is not re-tested: its pull request already was.
+- **CI**: GitHub Actions, `.github/workflows/ci.yml`. Runs on every pull request and every push to `develop` and `main`: quality gate, SAST, Docker image and desktop builds.
 - **CD (web)**: Docker image served by nginx, built and deployed by Render on every merge to `main`, once CI passes.
 - **Release (desktop)**: `.github/workflows/release.yml` builds Windows, macOS and Linux packages when a `vX.Y.Z` tag is pushed and attaches them, with a `SHA256SUMS.txt` checksum file, to a GitHub Release. Each OS ships an installer: Windows `-setup.exe`, macOS `.dmg`, Linux `.deb` (plus a portable `.tar.gz`). Nothing is signed yet.
 

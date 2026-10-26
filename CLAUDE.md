@@ -60,7 +60,7 @@ Rules:
 - Errors share one shape `{ "error": "...", "message": "..." }`; map 401 -> refresh once then logout, 403 `Email Not Verified` -> "check your inbox" screen, 429 -> honor `Retry-After`.
 
 ## 🚀 CI/CD
-- `.github/workflows/ci.yml`: on every PR (to `develop`/`main`) and on push to `main` -> checkout, setup Flutter from the pinned version, `pub get` (cached), format, analyze, test + coverage, `build web`. Build artifact uploaded.
+- `.github/workflows/ci.yml`: on every PR and push to `develop`/`main` -> checkout, setup Flutter from the pinned version, `pub get` (cached), format, analyze, test + coverage, `build web`. Build artifact uploaded. A `sast` job (after the quality gate) sends code + coverage to SonarQube Cloud (`sonar-project.properties`, secret `SONAR_TOKEN`) and fails when its quality gate fails.
 - Only the web build is deployed in Milestone 0. Mobile/desktop pipelines (signing, stores) come later; iOS/macOS builds need a macOS runner.
 - Deploy: Render, production built with the real `API_BASE_URL`. Auto-deploy gated on CI (Render "After CI Checks Pass") for `main` only. Hosting shape (Docker + nginx web service vs static site fed by CI) is decided when we build the pipeline; either way the SPA needs a fallback to `index.html` and security headers.
 - Branch protection on `main`/`develop`: PR required, CI green required.

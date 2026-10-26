@@ -4,10 +4,9 @@ on:
   # Every change is checked on its pull request, against develop or main.
   pull_request:
     branches: [develop, main]
-  # After a merge, only main is re-checked: it is what gets deployed and released. develop is
-  # already covered by its pull request (the ruleset requires the branch to be up to date).
+  # After a merge, develop and main are re-checked: the checks run again on the merged code.
   push:
-    branches: [main]
+    branches: [develop, main]
 
 # A newer push to the same ref makes the previous run obsolete.
 concurrency:
@@ -58,6 +57,38 @@ jobs:
           name: web-build
           path: build/web
           retention-days: 7
+
+  sast:
+    name: SAST (SonarQube Cloud)
+    # Needs the coverage report produced by the quality gate.
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Sonar needs the full history to attribute issues to new code.
+          fetch-depth: 0
+
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage
+          path: coverage
+
+      # Project settings live in sonar-project.properties. The scan fails the job when the
+      # SonarQube quality gate fails.
+      - name: Scan
+        uses: SonarSource/sonarqube-scan-action@v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Check quality gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   docker-image:
     name: Docker image
