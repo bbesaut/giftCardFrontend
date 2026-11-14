@@ -1,0 +1,53 @@
+name: Mobile staging
+
+# Builds an Android APK pointed at the staging backend after every merge to develop, so testers
+# always have a sideloadable build without needing a store listing.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch: {}
+
+concurrency:
+  group: mobile-staging-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-staging:
+    name: Build Android APK (staging)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      API_BASE_URL: ${{ vars.API_BASE_URL_STAGING }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require API_BASE_URL_STAGING
+        run: |
+          if [ -z "${API_BASE_URL}" ]; then
+            echo "::error::Repository variable API_BASE_URL_STAGING is not set"
+            exit 1
+          fi
+
+      # Flutter version comes from pubspec.yaml (environment.flutter), the single source of truth.
+      - name: Set up Flutter
+        uses: ./.github/actions/setup-flutter
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Signed with the debug key (android/app/build.gradle.kts default): fine to sideload for
+      # testing, not for a store listing. Proper release signing comes with the store pipeline.
+      - name: Build APK (staging)
+        run: flutter build apk --release --dart-define=API_BASE_URL="${API_BASE_URL}"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-staging-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
