@@ -26,6 +26,8 @@ launch.ps1
 
 # Flutter/Dart/Pub related
 **/doc/api/
+**/*.g.dart
+**/*.freezed.dart
 **/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins-dependencies
@@ -61,3 +63,5 @@ config/local.json
 dist/
 gift-card-front-*
 gift-card-front_*
+
+HELP.md

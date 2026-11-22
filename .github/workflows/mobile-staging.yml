@@ -39,6 +39,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # *.freezed.dart / *.g.dart are generated, not committed (see CLAUDE.md).
+      - name: Generate code
+        run: dart run build_runner build
+
       # Signed with the debug key (android/app/build.gradle.kts default): fine to sideload for
       # testing, not for a store listing. Proper release signing comes with the store pipeline.
       - name: Build APK (staging)

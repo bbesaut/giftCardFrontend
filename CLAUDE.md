@@ -34,6 +34,8 @@ fvm flutter test --coverage                   # Unit + widget tests (CI)
 fvm flutter build web --release --dart-define=API_BASE_URL=<url>   # Production build
 ```
 
+**Windows gotcha**: `fvm use` needs to create a symlink (`.fvm/flutter_sdk` -> the pinned SDK), which Windows blocks without Developer Mode or an elevated terminal (`Cannot create link... Le client ne dispose pas d'un privilège nécessaire`). Either enable Developer Mode once, or just always prefix commands with `fvm` (`fvm flutter ...`, `fvm dart ...`) without running `fvm use` globally.
+
 ## 🏗️ Architecture (target)
 Feature-first Clean Architecture, dependencies point inward: `presentation -> domain <- data`. The domain layer imports nothing from Flutter, Dio or any storage package.
 
@@ -71,7 +73,7 @@ Rules:
 - Never hardcode secrets; never commit `.env` or certificates (`certs/` gitignored).
 - Ask before adding a dependency.
 - Prefer clear code over clever code; senior-level, production-ready quality.
-- Generated files (`*.g.dart`, `*.freezed.dart`) are not committed.
+- Generated files (`*.g.dart`, `*.freezed.dart`) are not committed. Any pipeline that builds from a clean checkout (CI, Docker, a new dev's machine) must run `dart run build_runner build` right after `pub get`, before analyze/test/build - easy to forget since it's silent until the first `freezed`/`json_serializable` feature lands and every build step fails on missing generated files.
 
 ## 📝 Git
 - Gitflow: `main` (prod), `develop`, `feature/*`, `fix/*`. Never force push to `main`. Never push to `main` without CI green.

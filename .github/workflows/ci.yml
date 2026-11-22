@@ -32,6 +32,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # *.freezed.dart / *.g.dart are generated, not committed (see CLAUDE.md).
+      - name: Generate code
+        run: dart run build_runner build
+
       - name: Check formatting
         run: dart format --output=none --set-exit-if-changed .
 
@@ -144,6 +148,10 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      # *.freezed.dart / *.g.dart are generated, not committed (see CLAUDE.md).
+      - name: Generate code
+        run: dart run build_runner build
 
       - name: Build ${{ matrix.target }}
         run: flutter build ${{ matrix.target }} --release
