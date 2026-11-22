@@ -11,11 +11,14 @@ class AuthApiClient {
 
   final Dio _dio;
 
-  Future<LoginResponseDto> login(LoginRequestDto request) async { // the http call
+  Future<LoginResponseDto> login(LoginRequestDto request) async {
+    // the http call
     final response = await _dio.post<Map<String, dynamic>>(
       '/api/v1/auth/login',
       data: request.toJson(),
     );
-    return LoginResponseDto.fromJson(response.data!);// ! = is not gonna be null
+    return LoginResponseDto.fromJson(
+      response.data!,
+    ); // ! = is not gonna be null
   }
 }

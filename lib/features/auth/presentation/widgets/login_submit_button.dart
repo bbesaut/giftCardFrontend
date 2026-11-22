@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
 class LoginSubmitButton extends StatelessWidget {
-  const LoginSubmitButton({required this.isLoading, required this.onPressed, super.key});
+  const LoginSubmitButton({
+    required this.isLoading,
+    required this.onPressed,
+    super.key,
+  });
 
   final bool isLoading; // the parent handles the state, we don't need a statefull widget here
   final VoidCallback? onPressed;

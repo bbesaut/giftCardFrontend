@@ -16,11 +16,17 @@ void main() {
   });
 
   test('login posts the serialized request body to /api/v1/auth/login and parses the response', () async {
-    const request = LoginRequestDto(email: 'user@example.com', password: 'secret123');
+    const request = LoginRequestDto(
+      email: 'user@example.com',
+      password: 'secret123',
+    );
     final requestOptions = RequestOptions(path: '/api/v1/auth/login');
 
     when(
-      () => dio.post<Map<String, dynamic>>('/api/v1/auth/login', data: request.toJson()),
+      () => dio.post<Map<String, dynamic>>(
+        '/api/v1/auth/login',
+        data: request.toJson(),
+      ),
     ).thenAnswer(
       (_) async => Response(
         requestOptions: requestOptions,
@@ -34,18 +40,25 @@ void main() {
     expect(response.accessToken, 'jwt.token.value');
   });
 
-  test('login lets a DioException propagate unchanged for the repository to map', () async {
-    final requestOptions = RequestOptions(path: '/api/v1/auth/login');
-    when(() => dio.post<Map<String, dynamic>>(any(), data: any(named: 'data'))).thenThrow(
-      DioException(
-        requestOptions: requestOptions,
-        response: Response(requestOptions: requestOptions, statusCode: 401),
-      ),
-    );
+  test(
+    'login lets a DioException propagate unchanged for the repository to map',
+    () async {
+      final requestOptions = RequestOptions(path: '/api/v1/auth/login');
+      when(
+        () => dio.post<Map<String, dynamic>>(any(), data: any(named: 'data')),
+      ).thenThrow(
+        DioException(
+          requestOptions: requestOptions,
+          response: Response(requestOptions: requestOptions, statusCode: 401),
+        ),
+      );
 
-    await expectLater(
-      client.login(const LoginRequestDto(email: 'user@example.com', password: 'wrong')),
-      throwsA(isA<DioException>()),
-    );
-  });
+      await expectLater(
+        client.login(
+          const LoginRequestDto(email: 'user@example.com', password: 'wrong'),
+        ),
+        throwsA(isA<DioException>()),
+      );
+    },
+  );
 }

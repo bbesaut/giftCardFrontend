@@ -21,10 +21,14 @@ DioException _exceptionWithResponse(
 }
 
 void main() {
-  group('mapDioExceptionToFailure', () { // function's name we want to test
+  group('mapDioExceptionToFailure', () {
+    // function's name we want to test
     test('maps 400 to ValidationFailure with the backend message', () {
       final failure = mapDioExceptionToFailure(
-        _exceptionWithResponse(400, {'error': 'Bad Request', 'message': 'Email cannot be blank'}),
+        _exceptionWithResponse(400, {
+          'error': 'Bad Request',
+          'message': 'Email cannot be blank',
+        }),
       );
 
       expect(failure, isA<ValidationFailure>());
@@ -33,7 +37,10 @@ void main() {
 
     test('maps 401 to UnauthorizedFailure', () {
       final failure = mapDioExceptionToFailure(
-        _exceptionWithResponse(401, {'error': 'Unauthorized', 'message': 'Invalid email or password'}),
+        _exceptionWithResponse(401, {
+          'error': 'Unauthorized',
+          'message': 'Invalid email or password',
+        }),
       );
 
       expect(failure, isA<UnauthorizedFailure>());
@@ -42,7 +49,10 @@ void main() {
 
     test('maps 403 to ForbiddenFailure', () {
       final failure = mapDioExceptionToFailure(
-        _exceptionWithResponse(403, {'error': 'Forbidden', 'message': 'Email Not Verified'}),
+        _exceptionWithResponse(403, {
+          'error': 'Forbidden',
+          'message': 'Email Not Verified',
+        }),
       );
 
       expect(failure, isA<ForbiddenFailure>());
@@ -52,18 +62,29 @@ void main() {
       final failure = mapDioExceptionToFailure(
         _exceptionWithResponse(
           429,
-          {'error': 'Too Many Requests', 'message': 'Too many requests. Please try again later.'},
-          headers: {'retry-after': const ['30']},
+          {
+            'error': 'Too Many Requests',
+            'message': 'Too many requests. Please try again later.',
+          },
+          headers: {
+            'retry-after': const ['30'],
+          },
         ),
       );
 
       expect(failure, isA<RateLimitFailure>());
-      expect((failure as RateLimitFailure).retryAfter, const Duration(seconds: 30));
+      expect(
+        (failure as RateLimitFailure).retryAfter,
+        const Duration(seconds: 30),
+      );
     });
 
     test('maps 429 without a Retry-After header to a null retryAfter', () {
       final failure = mapDioExceptionToFailure(
-        _exceptionWithResponse(429, {'error': 'Too Many Requests', 'message': 'Slow down'}),
+        _exceptionWithResponse(429, {
+          'error': 'Too Many Requests',
+          'message': 'Slow down',
+        }),
       );
 
       expect((failure as RateLimitFailure).retryAfter, isNull);
@@ -71,7 +92,10 @@ void main() {
 
     test('maps 500 to ServerFailure', () {
       final failure = mapDioExceptionToFailure(
-        _exceptionWithResponse(500, {'error': 'Internal Server Error', 'message': 'Database error occurred'}),
+        _exceptionWithResponse(500, {
+          'error': 'Internal Server Error',
+          'message': 'Database error occurred',
+        }),
       );
 
       expect(failure, isA<ServerFailure>());
@@ -79,18 +103,26 @@ void main() {
 
     test('maps an unexpected status code to UnknownFailure', () {
       final failure = mapDioExceptionToFailure(
-        _exceptionWithResponse(418, {'error': "I'm a teapot", 'message': 'Unexpected'}),
+        _exceptionWithResponse(418, {
+          'error': "I'm a teapot",
+          'message': 'Unexpected',
+        }),
       );
 
       expect(failure, isA<UnknownFailure>());
     });
 
-    test('maps a non-JSON error body to a fallback message instead of throwing', () {
-      final failure = mapDioExceptionToFailure(_exceptionWithResponse(500, null));
+    test(
+      'maps a non-JSON error body to a fallback message instead of throwing',
+      () {
+        final failure = mapDioExceptionToFailure(
+          _exceptionWithResponse(500, null),
+        );
 
-      expect(failure, isA<ServerFailure>());
-      expect(failure.message, 'Unexpected server error.');
-    });
+        expect(failure, isA<ServerFailure>());
+        expect(failure.message, 'Unexpected server error.');
+      },
+    );
 
     test('maps a connection error (no response at all) to NetworkFailure', () {
       final exception = DioException(

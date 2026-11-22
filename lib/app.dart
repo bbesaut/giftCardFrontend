@@ -17,7 +17,8 @@ class GiftCardApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: BlocProvider<LoginCubit>( // define the first page shown when app started (blocprovider creates instance of logincubit, and make it available to his childs)
+      home: BlocProvider<LoginCubit>(
+        // define the first page shown when app started (blocprovider creates instance of logincubit, and make it available to his childs)
         create: (_) => getIt<LoginCubit>(),
         child: const LoginPage(),
       ),

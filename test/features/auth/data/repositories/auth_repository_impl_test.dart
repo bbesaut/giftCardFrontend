@@ -16,7 +16,12 @@ void main() {
   late AuthRepositoryImpl repository;
 
   setUpAll(() {
-    registerFallbackValue(const LoginRequestDto(email: 'fallback@example.com', password: 'fallback'));
+    registerFallbackValue(
+      const LoginRequestDto(
+        email: 'fallback@example.com',
+        password: 'fallback',
+      ),
+    );
   });
 
   setUp(() {
@@ -30,7 +35,10 @@ void main() {
       (_) async => const LoginResponseDto(accessToken: 'jwt.token.value'),
     );
 
-    final result = await repository.login(email: 'user@example.com', password: 'secret123');
+    final result = await repository.login(
+      email: 'user@example.com',
+      password: 'secret123',
+    );
 
     expect(result.getRight().toNullable()?.accessToken, 'jwt.token.value');
     expect(sessionStore.accessToken, 'jwt.token.value');
@@ -44,12 +52,18 @@ void main() {
         response: Response(
           requestOptions: requestOptions,
           statusCode: 401,
-          data: {'error': 'Unauthorized', 'message': 'Invalid email or password'},
+          data: {
+            'error': 'Unauthorized',
+            'message': 'Invalid email or password',
+          },
         ),
       ),
     );
 
-    final result = await repository.login(email: 'user@example.com', password: 'wrong');
+    final result = await repository.login(
+      email: 'user@example.com',
+      password: 'wrong',
+    );
 
     expect(result.getLeft().toNullable(), isA<UnauthorizedFailure>());
     expect(sessionStore.isAuthenticated, isFalse);

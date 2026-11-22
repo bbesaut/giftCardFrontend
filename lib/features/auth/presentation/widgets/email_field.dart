@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
 class EmailField extends StatelessWidget {
-  const EmailField({required this.controller, required this.enabled, super.key}); 
+  const EmailField({
+    required this.controller,
+    required this.enabled,
+    super.key,
+  });
 
-  final TextEditingController controller;// the controller (a dependency) permit to read the written text
-                                         // it contains the field data (text) but is a parameter, so we don't need a statefullwidget here
+  final TextEditingController
+  controller; // the controller (a dependency) permit to read the written text
+  // it contains the field data (text) but is a parameter, so we don't need a statefullwidget here
   final bool enabled;
 
   @override

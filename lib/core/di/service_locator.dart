@@ -13,7 +13,8 @@ final getIt = GetIt.instance; // getIt = centralize DI of the app
 /// Registers every dependency the app needs. Called once from `main()`.
 /// Resolution (`getIt<T>()`) happens at each feature's composition boundary
 /// (a route's `BlocProvider`), not scattered through business logic.
-void configureDependencies() { // we declare here all the dependencies as singletons or factories
+void configureDependencies() {
+  // we declare here all the dependencies as singletons or factories
   getIt.registerLazySingleton<Dio>(createDioClient); // GetIt registers a Dio when someone needs it fore the first time (when this happen, call createDioClient)
   getIt.registerLazySingleton<AuthSessionStore>(AuthSessionStore.new); // GetIt registers an AuthSessionStore when someone needs it fore the first time (when this happen, call ...)
 
@@ -23,6 +24,8 @@ void configureDependencies() { // we declare here all the dependencies as single
   );
 
   // Factory, not singleton: a Cubit is scoped to the screen that owns it
-  getIt.registerFactory<LoginCubit>(() => LoginCubit(getIt())); // when someone calls a logincubit, 
+  getIt.registerFactory<LoginCubit>(
+    () => LoginCubit(getIt()),
+  ); // when someone calls a logincubit,
   // getIt() = find me the dependency i need here
 }

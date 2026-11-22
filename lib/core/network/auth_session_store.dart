@@ -9,9 +9,9 @@ class AuthSessionStore {
 
   String? get accessToken => _accessToken; // getter of the _accessToken
 
-  bool get isAuthenticated => _accessToken != null; 
+  bool get isAuthenticated => _accessToken != null;
 
-  void save(String accessToken) { 
+  void save(String accessToken) {
     _accessToken = accessToken;
   }
 

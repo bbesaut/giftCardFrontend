@@ -7,7 +7,7 @@ class ApiErrorDto {
   final String message;
 
   factory ApiErrorDto.fromJson(Map<String, dynamic> json) => ApiErrorDto(
-        error: json['error'] as String? ?? 'Unknown',
-        message: json['message'] as String? ?? 'An unknown error occurred.',
-      );
+    error: json['error'] as String? ?? 'Unknown',
+    message: json['message'] as String? ?? 'An unknown error occurred.',
+  );
 }

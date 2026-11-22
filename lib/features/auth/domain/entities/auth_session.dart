@@ -7,7 +7,8 @@ part 'auth_session.freezed.dart';
 /// Uses `freezed` purely for value equality (so it compares correctly once
 /// embedded in `LoginState` during tests), not for union-type behavior.
 @freezed // (from package freezed) will generate automaticly constructors, getters, setters, copyWith, == hascode and toString
-sealed class AuthSession with _$AuthSession { // "$" with freezed will generate .dart and .freezed.dart ()
+sealed class AuthSession with _$AuthSession {
+  // "$" with freezed will generate .dart and .freezed.dart ()
   const factory AuthSession({required String accessToken}) = _AuthSession;
 }
 

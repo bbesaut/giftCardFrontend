@@ -29,10 +29,13 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
         ),
-      ).thenAnswer((_) async => const Right(AuthSession(accessToken: 'jwt.token.value')));
+      ).thenAnswer(
+        (_) async => const Right(AuthSession(accessToken: 'jwt.token.value')),
+      );
       return LoginCubit(authRepository);
     },
-    act: (cubit) => cubit.login(email: 'user@example.com', password: 'secret123'),
+    act: (cubit) =>
+        cubit.login(email: 'user@example.com', password: 'secret123'),
     expect: () => [
       const LoginState.loading(),
       const LoginState.success(AuthSession(accessToken: 'jwt.token.value')),
@@ -47,7 +50,10 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
         ),
-      ).thenAnswer((_) async => const Left(UnauthorizedFailure('Invalid email or password')));
+      ).thenAnswer(
+        (_) async =>
+            const Left(UnauthorizedFailure('Invalid email or password')),
+      );
       return LoginCubit(authRepository);
     },
     act: (cubit) => cubit.login(email: 'user@example.com', password: 'wrong'),

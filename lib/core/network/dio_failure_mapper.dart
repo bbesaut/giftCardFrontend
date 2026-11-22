@@ -7,7 +7,8 @@ import 'api_error_dto.dart';
 /// backend's error envelope (`ApiErrorDto`) and status code. Shared across
 /// every feature's repository, since the backend's error contract is the
 /// same for all endpoints (see the project's CLAUDE.md "Backend Contract").
-Failure mapDioExceptionToFailure(DioException exception) { // purpose = transform the backend's error reponse into a dart Failure
+Failure mapDioExceptionToFailure(DioException exception) {
+  // purpose = transform the backend's error reponse into a dart Failure
   final response = exception.response;
   if (response == null) {
     return NetworkFailure(
@@ -15,7 +16,8 @@ Failure mapDioExceptionToFailure(DioException exception) { // purpose = transfor
     );
   }
 
-  final message = _tryParseApiError(response.data)?.message ?? 'Unexpected server error.';
+  final message =
+      _tryParseApiError(response.data)?.message ?? 'Unexpected server error.';
 
   switch (response.statusCode) {
     case 400:
@@ -25,7 +27,10 @@ Failure mapDioExceptionToFailure(DioException exception) { // purpose = transfor
     case 403:
       return ForbiddenFailure(message);
     case 429:
-      return RateLimitFailure(message, retryAfter: _parseRetryAfter(response.headers));
+      return RateLimitFailure(
+        message,
+        retryAfter: _parseRetryAfter(response.headers),
+      );
     case 500:
       return ServerFailure(message);
     default:
