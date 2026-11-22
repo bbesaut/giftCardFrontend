@@ -85,6 +85,10 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # *.freezed.dart / *.g.dart are generated, not committed (see CLAUDE.md).
+      - name: Generate code
+        run: dart run build_runner build
+
       - name: Build ${{ matrix.target }}
         shell: bash
         run: flutter build ${{ matrix.target }} --release --dart-define=API_BASE_URL="${API_BASE_URL}"

@@ -31,6 +31,8 @@ COPY pubspec.yaml pubspec.lock ./
 RUN flutter pub get
 
 COPY . .
+# *.freezed.dart / *.g.dart are generated, not committed (see CLAUDE.md).
+RUN dart run build_runner build
 RUN flutter build web --release --dart-define=API_BASE_URL=${API_BASE_URL}
 
 # ---- Runtime stage: static files served by nginx, as a non-root user ----
